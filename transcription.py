@@ -2,7 +2,7 @@ from io import BytesIO
 from pathlib import Path
 from functools import cache
 from difflib import SequenceMatcher
-from typing import Any, Concatenate, cast
+from typing import Any, ClassVar, Concatenate, cast
 from collections.abc import Callable, Iterator
 
 from PIL import Image
@@ -10,7 +10,7 @@ from jinja2 import Environment, FileSystemLoader, Template
 from ollama import AsyncClient
 import ollama
 from paddleocr import PaddleOCR  # pyright: ignore[reportMissingTypeStubs]
-from pydantic import BaseModel, RootModel
+from pydantic import BaseModel, ConfigDict, RootModel
 import re
 
 from constants import (
@@ -61,11 +61,7 @@ class PaddleOCRResult(BaseModel):
     rec_boxes: list[list[int]]
 
 
-class PaddleOcrResultContainter(BaseModel):
-    res: PaddleOCRResult
-
-
-class PaddleOcrPredictResult(RootModel[list[PaddleOcrResultContainter]]): ...
+class PaddleOcrPredictResult(RootModel[list[PaddleOCRResult]]): ...
 
 
 def png_ocr(png_path: Path) -> list[OCRText]:
@@ -75,9 +71,9 @@ def png_ocr(png_path: Path) -> list[OCRText]:
     results: list[OCRText] = []
     for prediction in predictions:
         for text, confidence, box in zip(
-            prediction.res.rec_texts,
-            prediction.res.rec_scores,
-            prediction.res.rec_boxes,
+            prediction.rec_texts,
+            prediction.rec_scores,
+            prediction.rec_boxes,
         ):
             results.append(
                 OCRText(
@@ -182,6 +178,8 @@ def record_crop(image: Image.Image, record: OCRText):
 
 
 class OllamaChunk(BaseModel):
+    model_config: ClassVar[ConfigDict] = ConfigDict(from_attributes=True)
+
     response: str
 
 
