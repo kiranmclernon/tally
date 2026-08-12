@@ -1,0 +1,4 @@
+Initial OCR reading: {{ original_text|tojson }}.
+Inspect the target crop and transcribe the visible row exactly, including its identifier, abbreviated description and size.
+Correct the OCR only when supported by the image. Exclude the separate price column.
+Return only the corrected target row, with no explanation.

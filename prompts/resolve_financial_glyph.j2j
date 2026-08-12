@@ -1,0 +1,5 @@
+{% if example_text %}
+The first images are verified examples from this receipt: {{ example_text }}.
+{% endif %}
+The last image is the target. Identify only its glyph.
+Return one allowed value from the visible shape; use unreadable if it cannot be distinguished.

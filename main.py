@@ -1,38 +1,40 @@
+import argparse
+import asyncio
 import logging
 from pathlib import Path
-from time import sleep
-import uuid
-from utils import (
-    toggle_ollama,
-    transcribe_receipt,
-)
-import sys
+
+from transcription import transcribe_receipt, write_transcription
 
 
-path = Path(
-    "groceries/validation/tuning-images"
-)
+class Arguments(argparse.Namespace):
+    input_image: Path
+    output: Path
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(message)s",
-    stream=sys.stdout,
-    force=True,
-)
+    def __init__(self) -> None:
+        super().__init__()
+        self.input_image = Path()
+        self.output = Path()
 
 
-def main():
-    toggle_ollama("start")
-    sleep(5)
+def parse_args() -> Arguments:
+    parser = argparse.ArgumentParser(description="Transcribe a receipt image.")
+    _ = parser.add_argument("input_image", type=Path, help="Path to the receipt image")
+    _ = parser.add_argument("output", type=Path, help="Path for the text transcription")
+    args = parser.parse_args(namespace=Arguments())
+    if not args.input_image.is_file():
+        parser.error(f"input image does not exist: {args.input_image}")
+    return args
 
-    run_id = uuid.uuid4()
 
-    for idx, image_path in enumerate(path.iterdir()):
-        logging.info(f"Begining {idx}: {image_path.stem}")
-        transcribe_receipt(str(run_id), image_path, Path("output"))
+def main() -> None:
+    args = parse_args()
+    records = asyncio.run(transcribe_receipt(args.input_image))
 
-    toggle_ollama("stop")
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    _ = args.output.write_text(write_transcription(records), encoding="utf-8")
+    logging.info("Wrote transcription to %s", args.output)
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     main()

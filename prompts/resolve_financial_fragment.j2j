@@ -1,0 +1,3 @@
+The target is the short financial fragment centered in the crop.
+Return only that fragment, using symbols, digits, decimal points, spaces, `/kg`, or `/ea`.
+Do not transcribe surrounding product words or neighboring price fragments.
